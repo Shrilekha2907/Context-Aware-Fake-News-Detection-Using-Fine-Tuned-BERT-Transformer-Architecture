@@ -1,0 +1,82 @@
+{
+  "student": 4,
+  "algorithm": "Fine-tuned BERT",
+  "partition_fingerprint": "d17a2299ad1e64b524d50ac41e3b9828308b4c483a80ced900d85fc913777544",
+  "test_metrics": {
+    "accuracy": 0.9781489213639527,
+    "precision": 0.9724256785868161,
+    "recall": 0.9604255319148937,
+    "f1": 0.9663883536715907
+  },
+  "robustness": [
+    {
+      "subset": "All test headlines",
+      "rows": 7185,
+      "fake_rows": 2350,
+      "accuracy": 0.9781,
+      "precision": 0.9724,
+      "recall": 0.9604,
+      "f1": 0.9664
+    },
+    {
+      "subset": "Excluding synthetic (AUGMENT)",
+      "rows": 5860,
+      "fake_rows": 1025,
+      "accuracy": 0.984,
+      "precision": 0.9396,
+      "recall": 0.9707,
+      "f1": 0.9549
+    },
+    {
+      "subset": "Without giveaway words",
+      "rows": 5193,
+      "fake_rows": 462,
+      "accuracy": 0.9752,
+      "precision": 0.8955,
+      "recall": 0.816,
+      "f1": 0.8539
+    },
+    {
+      "subset": "Neither synthetic nor giveaway",
+      "rows": 4922,
+      "fake_rows": 191,
+      "accuracy": 0.986,
+      "precision": 0.7905,
+      "recall": 0.8691,
+      "f1": 0.8279
+    }
+  ],
+  "details": {
+    "model_name": "bert-base-uncased",
+    "max_len": 64,
+    "batch_size": 32,
+    "epochs": 3,
+    "learning_rate": 2e-05,
+    "training_log": [
+      {
+        "epoch": 1,
+        "train_loss": 0.17407644459113963,
+        "accuracy": 0.9745267260579065,
+        "precision": 0.9800620292423571,
+        "recall": 0.9412765957446808,
+        "f1": 0.9602778380724983
+      },
+      {
+        "epoch": 2,
+        "train_loss": 0.07547375373964425,
+        "accuracy": 0.9792594654788419,
+        "precision": 0.977026441265713,
+        "recall": 0.9591489361702128,
+        "f1": 0.968005153532317
+      },
+      {
+        "epoch": 3,
+        "train_loss": 0.04443207454549074,
+        "accuracy": 0.9773106904231625,
+        "precision": 0.9679075738125802,
+        "recall": 0.9625531914893617,
+        "f1": 0.9652229571154256
+      }
+    ]
+  }
+}

@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IFND Headline Checker</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,650&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="#check"><strong>IFND Headline Checker</strong><span>Fine-tuned BERT</span></a>
+    <nav aria-label="Page sections">
+      <a href="#check">Check</a><a href="#game">You vs BERT</a><a href="#batch">Many headlines</a><a href="#results">Results</a><a href="#recent">Recent</a>
+    </nav>
+    <p id="status" class="status" role="status"><i></i><span>Connecting</span></p>
+  </div>
+</header>
+
+<main class="wrap">
+  <section id="check" class="section check-grid">
+    <div class="input-col">
+      <h1>Check a headline</h1>
+      <label for="headline">The score updates as you type</label>
+      <textarea id="headline" maxlength="2000" rows="4" placeholder="Paste an English news headline"></textarea>
+      <div class="row">
+        <button class="primary" id="explain-btn" type="button">Explain this result</button>
+        <button class="secondary" id="sample-btn" type="button">Try a test headline</button>
+        <button class="text" id="clear-btn" type="button">Clear</button>
+      </div>
+      <p id="check-error" class="error" role="alert" hidden></p>
+
+      <div id="words-block" class="words-block" hidden>
+        <div class="words-head">
+          <h2>Word map</h2>
+          <button class="text" id="restore-btn" type="button" hidden>Restore all words</button>
+        </div>
+        <p class="hint">Red words push towards Fake and green towards Real. The numbers show the effect of removing that word alone. Click words to remove them and see the score change; removing several can change it much more.</p>
+        <div id="words" class="words"></div>
+      </div>
+      <p id="explain-wait" class="hint pulse" hidden>Testing each word. This can take a few seconds on a CPU.</p>
+    </div>
+
+    <aside class="panel gauge" aria-live="polite">
+      <p id="score-kind" class="kicker">Waiting for a headline</p>
+      <p id="verdict" class="verdict">NO SCORE YET</p>
+      <p class="big"><span id="big-number">--</span><small>probability of fake</small></p>
+      <div class="track" id="track"><i id="fill"></i><b></b></div>
+      <div class="scale"><span>Real</span><span>50%</span><span>Fake</span></div>
+      <p id="shift" class="note" hidden></p>
+      <p id="truth" class="note" hidden></p>
+      <p id="giveaway" class="note caution" hidden>This headline contains words common on fact-checking sites, such as "viral" or "claim". They can push the model towards Fake whatever the claim says.</p>
+      <p id="truncated" class="note" hidden>This headline is too long, so the model read only the first 64 tokens.</p>
+      <p class="hint">BERT reads wording only. It does not check facts.</p>
+    </aside>
+  </section>
+
+  <section id="game" class="section">
+    <div class="section-head">
+      <div><h2 class="title">You vs BERT</h2><p class="hint">Guess first, then see the answer. These are test headlines the model never saw in training.</p></div>
+      <div class="scoreboard" aria-live="polite">
+        <div><span>You</span><strong id="you-score">0 / 0</strong></div>
+        <div><span>BERT</span><strong id="bert-score">0 / 0</strong></div>
+        <button class="text" id="game-reset" type="button">Reset</button>
+      </div>
+    </div>
+    <div class="panel game">
+      <p id="game-headline" class="game-headline">Loading a headline</p>
+      <div id="game-guess" class="row">
+        <button class="choice real" id="guess-real" type="button">It's real</button>
+        <button class="choice fake" id="guess-fake" type="button">It's fake</button>
+      </div>
+      <div id="game-reveal" class="reveal" hidden>
+        <p id="game-outcome" class="outcome"></p>
+        <p id="game-detail"></p>
+        <div class="row">
+          <button class="primary" id="game-next" type="button">Next headline</button>
+          <button class="secondary" id="game-open" type="button">Open in checker</button>
+        </div>
+      </div>
+      <p id="game-error" class="error" role="alert" hidden></p>
+    </div>
+    <p class="hint under">The set is a deliberately hard mix of 30 fake headlines with giveaway words, 30 without them and 60 real, so scores here won't match the overall test results.</p>
+  </section>
+
+  <section id="batch" class="section">
+    <h2 class="title">Check many headlines</h2>
+    <label for="batch-input">One headline per line, up to 200</label>
+    <textarea id="batch-input" rows="6" placeholder="First headline&#10;Second headline"></textarea>
+    <div class="row top">
+      <button class="primary" id="batch-btn" type="button">Check all</button>
+      <button class="secondary" id="batch-samples" type="button">Add 5 test headlines</button>
+      <span id="batch-count" class="hint">0 headlines</span>
+    </div>
+    <p id="batch-error" class="error" role="alert" hidden></p>
+    <div id="batch-results" class="batch-results" hidden>
+      <div id="split" class="split" aria-hidden="true"></div>
+      <div class="row between">
+        <div id="batch-filters" class="segments" role="group" aria-label="Filter results"></div>
+        <button class="secondary" id="batch-download" type="button">Download CSV</button>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr>
+          <th>Headline</th><th>Result</th>
+          <th class="num"><button class="sort" id="batch-sort" type="button">Probability of fake <span id="sort-mark"></span></button></th>
+        </tr></thead>
+        <tbody id="batch-rows"></tbody>
+      </table></div>
+      <p class="hint">Click a row to open it in the checker.</p>
+    </div>
+  </section>
+
+  <section id="results" class="section">
+    <h2 class="title">Explore the test results</h2>
+    <p class="hint lead">7,185 headlines the model never saw in training. Fake is the positive class. Move the threshold or switch groups to see the scores change.</p>
+    <div id="results-error" class="error" role="alert" hidden></div>
+
+    <div class="controls">
+      <div class="control">
+        <label for="threshold">Call a headline fake when its probability is at least <output id="threshold-value">50%</output></label>
+        <input id="threshold" type="range" min="1" max="99" value="50">
+        <div class="scale"><span>Catches more fake, more false alarms</span><span>Fewer false alarms, misses more fake</span></div>
+      </div>
+      <div class="control">
+        <span class="control-label" id="group-label">Test headlines</span>
+        <div id="groups" class="segments" role="group" aria-labelledby="group-label"></div>
+      </div>
+    </div>
+
+    <div id="tiles" class="tiles"></div>
+
+    <div class="results-grid">
+      <figure class="chart-box">
+        <figcaption>Precision, recall and F1 at each threshold</figcaption>
+        <div id="legend" class="legend"></div>
+        <div class="chart-wrap" id="chart-wrap">
+          <svg id="chart" role="img" aria-label="Line chart of precision, recall and F1 against the decision threshold. The values for the selected threshold are in the score tiles above."></svg>
+          <div id="tooltip" class="tooltip" hidden></div>
+        </div>
+      </figure>
+      <div class="side">
+        <h3>Confusion matrix at this threshold</h3>
+        <div id="matrix" class="matrix"></div>
+        <h3>Training details</h3>
+        <dl id="details" class="details"></dl>
+      </div>
+    </div>
+    <p class="note caution wide">Scores fall when easy patterns are removed. "Neither synthetic nor giveaway" is the closest of these groups to a plain claim. Probabilities were recalculated from the saved model, and at the 50% threshold they give the same predictions as the notebook.</p>
+  </section>
+
+  <section id="recent" class="section">
+    <div class="section-head">
+      <div><h2 class="title">Recent checks</h2><p class="hint">Headlines you explained, saved on this computer.</p></div>
+      <div class="row">
+        <input id="recent-search" type="search" placeholder="Search" aria-label="Search recent checks">
+        <button class="secondary" id="recent-clear" type="button">Delete all</button>
+      </div>
+    </div>
+    <div id="recent-confirm" class="confirm" hidden>
+      <span>Delete all saved checks? This can't be undone.</span>
+      <div class="row">
+        <button class="danger" id="recent-yes" type="button">Delete all</button>
+        <button class="secondary" id="recent-no" type="button">Keep them</button>
+      </div>
+    </div>
+    <p id="recent-error" class="error" role="alert" hidden></p>
+    <ul id="recent-list" class="recent-list"></ul>
+    <p id="recent-empty" class="hint" hidden>No saved checks yet. Press "Explain this result" to save one.</p>
+  </section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
