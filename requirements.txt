@@ -1,0 +1,8 @@
+fastapi>=0.110
+uvicorn>=0.27
+torch>=2.2
+transformers>=5.0
+numpy
+pandas
+pytest
+httpx
